@@ -1,0 +1,5 @@
+- insert:
+    - id: fish-shell
+      name: dsh-fish-shell
+      config:
+        fishPath: /opt/homebrew/bin/fish
