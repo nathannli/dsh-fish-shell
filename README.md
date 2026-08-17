@@ -10,7 +10,11 @@ The public tool remains named `bash` so its existing schema, presentation, sandb
 
 It updates both foreground and background commands. When DSH mounts its sandboxing shell executor, it also changes the inner confined command from `bash -c` to `fish -c`. Persistent PTY terminal sessions are not changed.
 
-When configured with Babelfish, it preprocesses commands containing standalone Bash assignments before Fish runs them. For example, `NAME=value`, `export NAME=value`, and `NAME=$(command)` become Fish `set` commands. Fish-native commands are left unchanged. Babelfish failures stop the tool call instead of executing untranslated Bash.
+When configured with [Babelfish](https://github.com/bouk/babelfish), it preprocesses commands containing standalone Bash assignments before Fish runs them. For example, `NAME=value`, `export NAME=value`, and `NAME=$(command)` become Fish `set` commands. Fish-native commands are left unchanged. Babelfish failures stop the tool call instead of executing untranslated Bash.
+
+## Dependency
+
+Bash-assignment translation depends on [Babelfish](https://github.com/bouk/babelfish). It is optional: omit `babelfishPath` to run Fish directly without Bash translation.
 
 ## Configuration
 
