@@ -3,3 +3,4 @@
       name: dsh-fish-shell
       config:
         fishPath: /opt/homebrew/bin/fish
+        babelfishPath: /opt/homebrew/bin/babelfish

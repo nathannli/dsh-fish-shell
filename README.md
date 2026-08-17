@@ -10,17 +10,24 @@ The public tool remains named `bash` so its existing schema, presentation, sandb
 
 It updates both foreground and background commands. When DSH mounts its sandboxing shell executor, it also changes the inner confined command from `bash -c` to `fish -c`. Persistent PTY terminal sessions are not changed.
 
+When configured with Babelfish, it preprocesses commands containing standalone Bash assignments before Fish runs them. For example, `NAME=value`, `export NAME=value`, and `NAME=$(command)` become Fish `set` commands. Fish-native commands are left unchanged. Babelfish failures stop the tool call instead of executing untranslated Bash.
+
 ## Configuration
 
 By default, the plugin uses `$SHELL` when it ends in `/fish`; otherwise it runs `fish` from `PATH`. On this system `$SHELL` is `/opt/homebrew/bin/fish`, so the default resolves to that absolute path.
 
-Set an explicit executable path in the profile patch if needed:
+Set explicit executable paths in the profile patch if needed:
 
 ```yaml
 - id: fish-shell
   config:
     fishPath: /opt/homebrew/bin/fish
+    babelfishPath: /opt/homebrew/bin/babelfish
 ```
+
+`babelfishPath` is optional. Without it, the plugin runs Fish directly and does not rewrite Bash syntax. Install Babelfish with `brew install babelfish`.
+
+This is deliberately not a general Bash compatibility layer. Complex Bash syntax, inline environment assignments such as `NAME=value command`, and semantics Babelfish cannot translate should be written directly in Fish.
 
 ## Install
 

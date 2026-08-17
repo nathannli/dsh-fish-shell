@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { apply, inject, name } from '../index.mjs'
+import { apply, inject, name, shouldTranslateBash, translateBash } from '../index.mjs'
 
 function harness({ sandbox } = {}) {
   const calls = []
@@ -37,6 +37,37 @@ describe('fish-shell', () => {
   it('exports a Cordis plugin with its required services', () => {
     assert.equal(name, 'fish-shell')
     assert.deepEqual(inject, ['shell', 'systemPrompt'])
+  })
+
+  it('detects standalone Bash assignments but leaves Fish-native syntax alone', () => {
+    assert.equal(shouldTranslateBash('NAME=value'), true)
+    assert.equal(shouldTranslateBash('export REGION=ca-central-1'), true)
+    assert.equal(shouldTranslateBash('echo ok; VALUE=$(command)'), true)
+    assert.equal(shouldTranslateBash('set name value'), false)
+    assert.equal(shouldTranslateBash('if functions -q makeemr\n  echo loaded\nend'), false)
+  })
+
+  it('translates detected Bash assignments through Babelfish', () => {
+    const calls = []
+    const spawn = (...args) => {
+      calls.push(args)
+      return { error: undefined, signal: null, status: 0, stderr: '', stdout: "set NAME 'value'\n" }
+    }
+
+    assert.equal(translateBash('NAME=value', '/opt/homebrew/bin/babelfish', spawn), "set NAME 'value'\n")
+    assert.deepEqual(calls, [[
+      '/opt/homebrew/bin/babelfish',
+      [],
+      { encoding: 'utf8', input: 'NAME=value', maxBuffer: 1024 * 1024, timeout: 5_000 },
+    ]])
+    assert.equal(translateBash('set name value', '/opt/homebrew/bin/babelfish', spawn), 'set name value')
+  })
+
+  it('reports Babelfish failures instead of running untranslated Bash', () => {
+    assert.throws(
+      () => translateBash('NAME=value', 'babelfish', () => ({ error: undefined, signal: null, status: 1, stderr: 'unsupported syntax', stdout: '' })),
+      /Babelfish translation failed: unsupported syntax/,
+    )
   })
 
   it('uses Fish for foreground and background local shell argv', () => {
@@ -101,6 +132,9 @@ describe('fish-shell', () => {
   it('rejects invalid configuration and unsupported shell executors', () => {
     const invalid = harness()
     assert.throws(() => apply(invalid.ctx, { fishPath: '' }), /fishPath must be a non-empty string/)
+
+    const invalidBabelfish = harness()
+    assert.throws(() => apply(invalidBabelfish.ctx, { babelfishPath: '' }), /babelfishPath must be a non-empty string/)
 
     const unsupported = harness()
     delete unsupported.shell.runArgv
