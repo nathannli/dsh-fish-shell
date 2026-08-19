@@ -1,5 +1,7 @@
 # dsh-fish-shell
 
+# do not use. it simply causes more retries due to syntax rewrites
+
 A DeepSeek Harness (DSH) profile plugin that runs commands submitted through the model-facing `bash` tool with Fish instead:
 
 ```text
